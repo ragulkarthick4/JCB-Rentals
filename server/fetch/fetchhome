@@ -1,0 +1,33 @@
+const namesModel = require('../model/admin');
+const fs = require('fs');
+const path = require('path');
+exports.fetchnames = async (req, res) => {
+    try {
+        const admindata = await namesModel.find({});
+        console.log("Find request for data");
+        const images = [];
+        for (const data of admindata) {
+            const { _id, image, name, model, year, place} = data; // Destructure _id from data
+            console.log("ID:", _id.toString());
+            if (image) {
+                const imagePath = path.join('uploads', image);
+                if (fs.existsSync(imagePath)) {
+                    const imageFile = fs.readFileSync(imagePath);
+                    const base64Image = Buffer.from(imageFile).toString('base64');
+                    images.push({ _id:_id.toString(), name, image: base64Image, model, year, place});
+                } else {
+                    console.log(`Image file not found: ${image}`);
+                }
+            } else {
+                console.log(`Image name is undefined for data: ${JSON.stringify(data)}`);
+            }
+        }
+
+        res.send({
+            status: 200,
+            data: images
+        });
+    } catch (error) {
+        console.log(error);
+    }
+};
